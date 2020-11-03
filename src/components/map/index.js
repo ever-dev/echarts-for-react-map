@@ -77,31 +77,35 @@ const chartOption = {
 };
 
 export const Map = ({}) => {
-  const [state, setState] = useState(null);
+  const [state, setState] = useState({ label: "North Carolina", value: "37" });
   const [counties, setCounties] = useState([]);
-  const [county, setCounty] = useState(null);
+  const [county, setCounty] = useState({ value: "Durham" });
 
   const mapRef = useRef(null);
 
   useEffect(() => {
-    if (mapRef && state) {
+    if (mapRef && mapRef.current && state) {
       mapRef.current.getEchartsInstance().showLoading();
       fetch(`/geo_data/${state.value}.json`)
         .then((json) => json.json())
         .then((usaJson) => {
           setCounties(usaJson.features);
           echarts.registerMap("filteredState", usaJson);
-          mapRef.current.getEchartsInstance().hideLoading();
+          if (mapRef && mapRef.current) {
+            mapRef.current.getEchartsInstance().hideLoading();
+          }
         });
     }
   }, [state]);
 
   useEffect(() => {
-    if (mapRef && county) {
+    if (mapRef && mapRef.current && county) {
       const countyInfo = counties.find(
         (item) => item.properties.COUNTY === county.value
       );
-      console.log(countyInfo);
+      if (!countyInfo) {
+        return;
+      }
       const centerCoordinate = countyInfo.geometry.coordinates[0].reduce(
         (res, cur, index) => {
           if (index === 0) {
